@@ -4,21 +4,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: {
-          DEFAULT: '#0F0F1A',
-          light: '#161628',
-          lighter: '#1E1E35',
-        },
+        black: '#000000',
         pink: {
           DEFAULT: '#E84393',
           light: '#FF6FB7',
           dark: '#C9357D',
-          glow: 'rgba(232, 67, 147, 0.15)',
+          glow: 'rgba(232, 67, 147, 0.08)',
         },
       },
       fontFamily: {
         display: ['"Syne"', 'sans-serif'],
         body: ['"Outfit"', 'sans-serif'],
+      },
+      fontSize: {
+        '7xl': '5rem',
+        '8xl': '6rem',
+        '9xl': '8rem',
       },
     },
   },

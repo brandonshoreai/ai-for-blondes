@@ -11,7 +11,7 @@ const { title } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="AI for Blondes — Complex AI news made understandable. A free daily newsletter that translates the technical stuff into plain language." />
-    <meta name="theme-color" content="#0F0F1A" />
+    <meta name="theme-color" content="#000000" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,7 +22,7 @@ const { title } = Astro.props;
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
-  <body class="bg-navy text-white font-body antialiased overflow-x-hidden">
+  <body class="bg-black text-white font-body antialiased overflow-x-hidden">
     <slot />
   </body>
 </html>
@@ -57,7 +57,7 @@ const { title } = Astro.props;
     width: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #0F0F1A;
+    background: #000000;
   }
   ::-webkit-scrollbar-thumb {
     background: #E84393;
@@ -65,7 +65,7 @@ const { title } = Astro.props;
   }
 
   html {
-    scrollbar-color: #E84393 #0F0F1A;
+    scrollbar-color: #E84393 #000000;
     scrollbar-width: thin;
   }
 </style>
