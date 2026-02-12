@@ -4,15 +4,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        black: '#000000',
-        pink: {
-          DEFAULT: '#E84393',
-          light: '#FF6FB7',
-          dark: '#C9357D',
-        },
+        bg: '#0A0A0A',
+        cream: '#F5F0E8',
+        muted: '#A09888',
+        pink: '#E84393',
       },
       fontFamily: {
-        sans: ['"DM Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Instrument Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
       },
     },
   },
