@@ -4,16 +4,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: '#0F0F1A',
-        'navy-light': '#1A1A2E',
-        'navy-lighter': '#252540',
-        pink: '#E84393',
-        'pink-light': '#FD79A8',
-        'pink-dark': '#D63384',
+        navy: {
+          DEFAULT: '#0F0F1A',
+          light: '#161628',
+          lighter: '#1E1E35',
+        },
+        pink: {
+          DEFAULT: '#E84393',
+          light: '#FF6FB7',
+          dark: '#C9357D',
+          glow: 'rgba(232, 67, 147, 0.15)',
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['"Syne"', 'sans-serif'],
+        body: ['"Outfit"', 'sans-serif'],
       },
     },
   },
