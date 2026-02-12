@@ -12,7 +12,7 @@ function SignupForm({ id }: { id: string }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
-        className="text-cream font-medium"
+        className="text-pink font-medium"
       >
         You're in. Check your inbox.
       </motion.p>
@@ -30,11 +30,11 @@ function SignupForm({ id }: { id: string }) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="your@email.com"
-        className="flex-1 px-5 py-3 rounded-l-full bg-transparent border border-muted/30 border-r-0 text-cream placeholder:text-muted/50 text-sm focus:outline-none focus:border-pink transition-colors duration-300"
+        className="flex-1 px-5 py-3 rounded-l-full bg-white border border-muted/30 border-r-0 text-cream placeholder:text-muted/50 text-sm focus:outline-none focus:border-pink transition-colors duration-300"
       />
       <button
         type="submit"
-        className="px-6 py-3 rounded-r-full bg-pink text-cream text-sm font-medium hover:bg-pink/90 transition-colors duration-300"
+        className="px-6 py-3 rounded-r-full bg-pink text-white text-sm font-medium hover:bg-pink/90 transition-colors duration-300"
       >
         Subscribe
       </button>
@@ -152,9 +152,9 @@ export default function LandingPage() {
           </FadeIn>
 
           <FadeIn delay={0.1}>
-            <div className="max-w-2xl mx-auto rounded-sm bg-[#F5F0E8] text-[#1a1a1a] overflow-hidden">
+            <div className="max-w-2xl mx-auto rounded-sm bg-white text-[#1a1a1a] shadow-sm border border-muted/15 overflow-hidden">
               {/* Email header */}
-              <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-[#e0dbd3]">
+              <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-[#eee]">
                 <p className="font-medium text-sm">AI for Blondes</p>
                 <p className="text-xs text-[#888] mt-0.5">Tuesday, Feb 11 / 5 min read</p>
               </div>
@@ -171,7 +171,7 @@ export default function LandingPage() {
                   </p>
                 </div>
 
-                <hr className="border-[#e0dbd3]" />
+                <hr className="border-[#eee]" />
 
                 <div>
                   <p className="font-mono text-[10px] text-[#888] uppercase tracking-wider mb-3">Quick Hits</p>

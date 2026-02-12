@@ -4,9 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#0A0A0A',
-        cream: '#F5F0E8',
-        muted: '#A09888',
+        bg: '#F8F4EE',
+        cream: '#1a1a1a',
+        muted: '#6B6157',
         pink: '#E84393',
       },
       fontFamily: {
