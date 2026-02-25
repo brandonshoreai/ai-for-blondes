@@ -6,14 +6,14 @@ export default {
       colors: {
         black: '#000000',
         pink: {
-          DEFAULT: '#E84393',
-          light: '#FF6FB7',
-          dark: '#C9357D',
-          glow: 'rgba(232, 67, 147, 0.08)',
+          DEFAULT: '#D4728C',
+          light: '#E08BA3',
+          dark: '#BF5F7A',
+          glow: 'rgba(212, 114, 140, 0.08)',
         },
       },
       fontFamily: {
-        display: ['"Syne"', 'sans-serif'],
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
         body: ['"Outfit"', 'sans-serif'],
       },
       fontSize: {
