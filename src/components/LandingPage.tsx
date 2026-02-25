@@ -1,77 +1,121 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 type Phase = 'button' | 'input' | 'success';
-
-// Apple-style easing — smooth, no bounce
-const appleEase = [0.4, 0, 0.2, 1] as const;
-const appleFastEase = [0.16, 1, 0.3, 1] as const;
 
 function DynamicIslandSignup() {
   const [phase, setPhase] = useState<Phase>('button');
   const [email, setEmail] = useState('');
+  const [showContent, setShowContent] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Fade content out, morph pill, fade new content in
+  const morphTo = useCallback((next: Phase) => {
+    setShowContent(false);
+    setTimeout(() => {
+      setPhase(next);
+      // Let the CSS transition on the pill start, then fade content in
+      requestAnimationFrame(() => {
+        setTimeout(() => setShowContent(true), 60);
+      });
+    }, 150);
+  }, []);
+
   useEffect(() => {
-    if (phase === 'input' && inputRef.current) {
-      const t = setTimeout(() => inputRef.current?.focus(), 300);
-      return () => clearTimeout(t);
+    if (phase === 'input' && showContent && inputRef.current) {
+      inputRef.current.focus();
     }
-  }, [phase]);
+  }, [phase, showContent]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    setPhase('success');
+    morphTo('success');
     setTimeout(() => {
-      setPhase('button');
+      morphTo('button');
       setEmail('');
-    }, 3500);
+    }, 3000);
+  };
+
+  // Pill dimensions per phase
+  const pillStyles: Record<Phase, React.CSSProperties> = {
+    button: {
+      width: 260,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: '#D4607A',
+    },
+    input: {
+      width: 400,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: '#F5F5F7',
+    },
+    success: {
+      width: 220,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: '#D4607A',
+    },
   };
 
   return (
-    <div className="flex justify-center">
-      <AnimatePresence mode="wait">
-        {/* ─── BUTTON ─── */}
-        {phase === 'button' && (
-          <motion.button
-            key="btn"
-            onClick={() => setPhase('input')}
-            layoutId="pill"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: appleEase }}
-            className="relative flex items-center justify-center rounded-full cursor-pointer select-none overflow-hidden bg-[#D4607A] hover:bg-[#C4506A] px-12 py-4 transition-colors duration-300"
-            style={{ willChange: 'transform, width, border-radius' }}
-          >
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: appleEase }}
-              className="font-display font-semibold text-white text-lg tracking-wide whitespace-nowrap"
+    <div style={{ display: 'flex', justifyContent: 'center' }}>
+      {/* Single morphing pill — never unmounts */}
+      <div
+        onClick={() => phase === 'button' && morphTo('input')}
+        style={{
+          ...pillStyles[phase],
+          transition: 'all 0.55s cubic-bezier(0.32, 0.72, 0, 1)',
+          cursor: phase === 'button' ? 'pointer' : 'default',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          position: 'relative',
+          willChange: 'width, background-color',
+          border: phase === 'input' ? '1px solid #E5E5EA' : '1px solid transparent',
+          maxWidth: '100%',
+        }}
+      >
+        {/* Content layer — fades in/out independently of pill morph */}
+        <div
+          style={{
+            opacity: showContent ? 1 : 0,
+            transition: 'opacity 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            padding: '0 8px',
+          }}
+        >
+          {phase === 'button' && (
+            <span
+              style={{
+                fontFamily: '"Syne", sans-serif',
+                fontWeight: 600,
+                fontSize: 17,
+                color: '#fff',
+                letterSpacing: '0.02em',
+                whiteSpace: 'nowrap',
+                userSelect: 'none',
+              }}
             >
               Get the newsletter
-            </motion.span>
-          </motion.button>
-        )}
+            </span>
+          )}
 
-        {/* ─── INPUT ─── */}
-        {phase === 'input' && (
-          <motion.form
-            key="input"
-            onSubmit={handleSubmit}
-            layoutId="pill"
-            transition={{ duration: 0.55, ease: appleFastEase }}
-            className="relative flex items-center rounded-full cursor-pointer select-none overflow-hidden bg-[#F5F5F7] border border-[#E5E5EA] w-full max-w-md px-2 py-2"
-            style={{ willChange: 'transform, width, border-radius' }}
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.35, ease: appleEase }}
-              className="flex items-center w-full"
+          {phase === 'input' && (
+            <form
+              onSubmit={handleSubmit}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%',
+                height: '100%',
+                padding: '0 4px',
+              }}
             >
               <input
                 ref={inputRef}
@@ -80,14 +124,46 @@ function DynamicIslandSignup() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="flex-1 bg-transparent px-5 py-2 text-[#1D1D1F] placeholder:text-[#A1A1A6] font-body text-base outline-none"
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  padding: '0 16px',
+                  fontSize: 16,
+                  fontFamily: '"Outfit", sans-serif',
+                  color: '#1D1D1F',
+                }}
               />
-              <motion.button
+              <button
                 type="submit"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.15, ease: appleEase }}
-                className="flex-shrink-0 w-10 h-10 rounded-full bg-[#D4607A] flex items-center justify-center hover:bg-[#C4506A] transition-colors duration-200"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: '#D4607A',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'background-color 0.2s ease, transform 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#C4506A';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#D4607A';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.95)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
               >
                 <svg
                   width="18"
@@ -102,68 +178,101 @@ function DynamicIslandSignup() {
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
-              </motion.button>
-            </motion.div>
-          </motion.form>
-        )}
+              </button>
+            </form>
+          )}
 
-        {/* ─── SUCCESS ─── */}
-        {phase === 'success' && (
-          <motion.div
-            key="success"
-            layoutId="pill"
-            transition={{ duration: 0.5, ease: appleEase }}
-            className="relative flex items-center justify-center rounded-full select-none overflow-hidden bg-[#D4607A] px-12 py-4"
-            style={{ willChange: 'transform, width, border-radius' }}
-          >
-            <motion.span
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.15, duration: 0.35, ease: appleFastEase }}
-              className="font-display font-semibold text-white text-lg tracking-wide whitespace-nowrap"
+          {phase === 'success' && (
+            <span
+              style={{
+                fontFamily: '"Syne", sans-serif',
+                fontWeight: 600,
+                fontSize: 17,
+                color: '#fff',
+                letterSpacing: '0.02em',
+                whiteSpace: 'nowrap',
+                userSelect: 'none',
+              }}
             >
               You're in ✓
-            </motion.span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
 export default function LandingPage() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true));
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-white">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: appleFastEase }}
-        className="flex flex-col items-center text-center"
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0 24px',
+        backgroundColor: '#fff',
+      }}
+    >
+      <div
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+        }}
       >
-        {/* Brand */}
-        <h1 className="font-display font-extrabold text-5xl sm:text-6xl lg:text-7xl tracking-tight text-[#1D1D1F] mb-4">
-          AI for Blondes<span className="text-[#D4607A]">.</span>
+        <h1
+          style={{
+            fontFamily: '"Syne", sans-serif',
+            fontWeight: 800,
+            fontSize: 'clamp(3rem, 6vw, 5rem)',
+            letterSpacing: '-0.02em',
+            color: '#1D1D1F',
+            marginBottom: 16,
+            lineHeight: 1.1,
+          }}
+        >
+          AI for Blondes<span style={{ color: '#D4607A' }}>.</span>
         </h1>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35, duration: 0.7, ease: appleEase }}
-          className="text-[#86868B] text-lg sm:text-xl font-body mb-16 max-w-md"
+        <p
+          style={{
+            fontFamily: '"Outfit", sans-serif',
+            fontSize: 'clamp(1.1rem, 2vw, 1.25rem)',
+            color: '#86868B',
+            marginBottom: 56,
+            maxWidth: 400,
+            opacity: visible ? 1 : 0,
+            transition: 'opacity 0.7s ease 0.3s',
+          }}
         >
           Complex AI news, made understandable.
-        </motion.p>
+        </p>
 
-        {/* Dynamic Island Signup */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.7, ease: appleEase }}
-          className="w-full max-w-md"
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 420,
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'translateY(0)' : 'translateY(8px)',
+            transition: 'opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s',
+          }}
         >
           <DynamicIslandSignup />
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
