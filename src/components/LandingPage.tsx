@@ -1,207 +1,236 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-type Phase = 'button' | 'input' | 'success';
+type Phase = 'button' | 'squish' | 'input' | 'success';
+
+// System font stack — same as Cursor on Mac (SF Pro)
+const systemFont = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
 
 function DynamicIslandSignup() {
   const [phase, setPhase] = useState<Phase>('button');
   const [email, setEmail] = useState('');
-  const [showContent, setShowContent] = useState(true);
+  const [sendVisible, setSendVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fade content out, morph pill, fade new content in
-  const morphTo = useCallback((next: Phase) => {
-    setShowContent(false);
+  const handleClick = useCallback(() => {
+    if (phase !== 'button') return;
+    setPhase('squish');
     setTimeout(() => {
-      setPhase(next);
-      // Let the CSS transition on the pill start, then fade content in
-      requestAnimationFrame(() => {
-        setTimeout(() => setShowContent(true), 60);
-      });
-    }, 150);
-  }, []);
+      setPhase('input');
+      setTimeout(() => setSendVisible(true), 250);
+    }, 140);
+  }, [phase]);
 
   useEffect(() => {
-    if (phase === 'input' && showContent && inputRef.current) {
-      inputRef.current.focus();
+    if (phase === 'input') {
+      const t = setTimeout(() => inputRef.current?.focus(), 350);
+      return () => clearTimeout(t);
     }
-  }, [phase, showContent]);
+  }, [phase]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    morphTo('success');
+    setSendVisible(false);
     setTimeout(() => {
-      morphTo('button');
-      setEmail('');
-    }, 3000);
-  };
+      setPhase('success');
+      setTimeout(() => {
+        setPhase('button');
+        setEmail('');
+      }, 2200);
+    }, 100);
+  }, [email]);
 
-  // Pill dimensions per phase
-  const pillStyles: Record<Phase, React.CSSProperties> = {
-    button: {
-      width: 260,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: '#D4607A',
-    },
-    input: {
-      width: 400,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: '#F5F5F7',
-    },
-    success: {
-      width: 220,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: '#D4607A',
-    },
-  };
+  const isExpanded = phase === 'input';
+  const isSquished = phase === 'squish';
+  const isSuccess = phase === 'success';
+  const isButton = phase === 'button';
+
+  const width = isExpanded ? 380 : isSquished ? 160 : isSuccess ? 185 : 200;
+  const height = 50;
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
-      {/* Single morphing pill — never unmounts */}
       <div
-        onClick={() => phase === 'button' && morphTo('input')}
+        onClick={handleClick}
         style={{
-          ...pillStyles[phase],
-          transition: 'all 0.55s cubic-bezier(0.32, 0.72, 0, 1)',
-          cursor: phase === 'button' ? 'pointer' : 'default',
+          width,
+          height,
+          borderRadius: height / 2,
+          backgroundColor: isSuccess ? '#D4607A' : 'transparent',
+          border: '1.5px solid #D4607A',
+          transition: isSquished
+            ? 'all 0.1s cubic-bezier(0.4, 0, 1, 1)'
+            : [
+                'width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                'background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              ].join(', '),
+          transform: isSquished ? 'scale(0.82)' : 'scale(1)',
+          cursor: isButton ? 'pointer' : 'default',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
           position: 'relative',
-          willChange: 'width, background-color',
-          border: phase === 'input' ? '1px solid #E5E5EA' : '1px solid transparent',
-          maxWidth: '100%',
+          willChange: 'width, transform',
+          maxWidth: 'calc(100vw - 48px)',
         }}
       >
-        {/* Content layer — fades in/out independently of pill morph */}
-        <div
-          style={{
-            opacity: showContent ? 1 : 0,
-            transition: 'opacity 0.2s ease',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-            height: '100%',
-            padding: '0 8px',
-          }}
-        >
-          {phase === 'button' && (
-            <span
-              style={{
-                fontFamily: '"Syne", sans-serif',
-                fontWeight: 600,
-                fontSize: 17,
-                color: '#fff',
-                letterSpacing: '0.02em',
-                whiteSpace: 'nowrap',
-                userSelect: 'none',
-              }}
-            >
-              Get the newsletter
-            </span>
-          )}
+        {(isButton || isSquished) && (
+          <span
+            style={{
+              fontFamily: systemFont,
+              fontWeight: 500,
+              fontSize: 15,
+              color: '#D4607A',
+              letterSpacing: '0.02em',
+              whiteSpace: 'nowrap',
+              userSelect: 'none',
+              opacity: isSquished ? 0 : 1,
+              transition: 'opacity 0.08s ease',
+            }}
+          >
+            Sign Up
+          </span>
+        )}
 
-          {phase === 'input' && (
-            <form
-              onSubmit={handleSubmit}
+        {isExpanded && (
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              height: '100%',
+              padding: '0 5px 0 0',
+            }}
+          >
+            <input
+              ref={inputRef}
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              className="island-input"
               style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                padding: '0 18px',
+                fontSize: 17,
+                fontFamily: systemFont,
+                fontWeight: 400,
+                color: '#D4607A',
+                caretColor: '#D4607A',
+                letterSpacing: '0.01em',
+              }}
+            />
+            <button
+              type="submit"
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                backgroundColor: '#D4607A',
+                border: 'none',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                width: '100%',
-                height: '100%',
-                padding: '0 4px',
+                justifyContent: 'center',
+                flexShrink: 0,
+                transform: sendVisible ? 'scale(1)' : 'scale(0)',
+                opacity: sendVisible ? 1 : 0,
+                transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease',
               }}
             >
-              <input
-                ref={inputRef}
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                style={{
-                  flex: 1,
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  padding: '0 16px',
-                  fontSize: 16,
-                  fontFamily: '"Outfit", sans-serif',
-                  color: '#1D1D1F',
-                }}
-              />
-              <button
-                type="submit"
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: '#D4607A',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  transition: 'background-color 0.2s ease, transform 0.15s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#C4506A';
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#D4607A';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.95)';
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }}
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </button>
-            </form>
-          )}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </form>
+        )}
 
-          {phase === 'success' && (
-            <span
-              style={{
-                fontFamily: '"Syne", sans-serif',
-                fontWeight: 600,
-                fontSize: 17,
-                color: '#fff',
-                letterSpacing: '0.02em',
-                whiteSpace: 'nowrap',
-                userSelect: 'none',
-              }}
-            >
-              You're in ✓
-            </span>
-          )}
-        </div>
+        {isSuccess && (
+          <span
+            style={{
+              fontFamily: systemFont,
+              fontWeight: 500,
+              fontSize: 14,
+              color: '#fff',
+              letterSpacing: '0.02em',
+              whiteSpace: 'nowrap',
+              userSelect: 'none',
+            }}
+          >
+            You're in ✓
+          </span>
+        )}
       </div>
     </div>
   );
 }
+
+function Nav() {
+  const linkStyle: React.CSSProperties = {
+    fontFamily: systemFont,
+    fontWeight: 400,
+    fontSize: 13,
+    color: '#86868B',
+    textDecoration: 'none',
+    letterSpacing: '0.02em',
+    transition: 'color 0.2s ease',
+  };
+
+  return (
+    <nav
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: 28,
+        padding: '18px 32px',
+        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      }}
+    >
+      <a
+        href="/"
+        style={linkStyle}
+        onMouseEnter={(e) => (e.currentTarget.style.color = '#1D1D1F')}
+        onMouseLeave={(e) => (e.currentTarget.style.color = '#86868B')}
+      >
+        Home
+      </a>
+      <a
+        href="/about"
+        style={linkStyle}
+        onMouseEnter={(e) => (e.currentTarget.style.color = '#1D1D1F')}
+        onMouseLeave={(e) => (e.currentTarget.style.color = '#86868B')}
+      >
+        About
+      </a>
+      <a
+        href="/login"
+        style={linkStyle}
+        onMouseEnter={(e) => (e.currentTarget.style.color = '#1D1D1F')}
+        onMouseLeave={(e) => (e.currentTarget.style.color = '#86868B')}
+      >
+        Log In
+      </a>
+    </nav>
+  );
+}
+
+export { Nav };
 
 export default function LandingPage() {
   const [visible, setVisible] = useState(false);
@@ -211,68 +240,57 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0 24px',
-        backgroundColor: '#fff',
-      }}
-    >
+    <>
+      <Nav />
       <div
         style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          textAlign: 'center',
+          justifyContent: 'center',
+          padding: '80px 24px 80px',
+          backgroundColor: '#fff',
+          paddingTop: 92,
         }}
       >
-        <h1
-          style={{
-            fontFamily: '"Syne", sans-serif',
-            fontWeight: 800,
-            fontSize: 'clamp(3rem, 6vw, 5rem)',
-            letterSpacing: '-0.02em',
-            color: '#1D1D1F',
-            marginBottom: 16,
-            lineHeight: 1.1,
-          }}
-        >
-          AI for Blondes<span style={{ color: '#D4607A' }}>.</span>
-        </h1>
-
-        <p
-          style={{
-            fontFamily: '"Outfit", sans-serif',
-            fontSize: 'clamp(1.1rem, 2vw, 1.25rem)',
-            color: '#86868B',
-            marginBottom: 56,
-            maxWidth: 400,
-            opacity: visible ? 1 : 0,
-            transition: 'opacity 0.7s ease 0.3s',
-          }}
-        >
-          Complex AI news, made understandable.
-        </p>
-
+        {/* Hero image — gigantic */}
         <div
           style={{
-            width: '100%',
-            maxWidth: 420,
             opacity: visible ? 1 : 0,
-            transform: visible ? 'translateY(0)' : 'translateY(8px)',
-            transition: 'opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s',
+            transform: visible ? 'scale(1)' : 'scale(1.01)',
+            transition: 'opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1)',
+            marginBottom: 4,
+            width: '87%',
+            maxWidth: 957,
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src="/hero.png"
+            alt="Artificial Intelligence for blondes"
+            style={{
+              display: 'block',
+              width: '100%',
+              height: 'auto',
+            }}
+          />
+        </div>
+
+        {/* Sign Up button — raised 10px closer to hero */}
+        <div
+          style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s',
+            width: '100%',
+            maxWidth: 400,
           }}
         >
           <DynamicIslandSignup />
         </div>
       </div>
-    </div>
+    </>
   );
 }
