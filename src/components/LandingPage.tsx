@@ -8,8 +8,43 @@ const systemFont = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Di
 function DynamicIslandSignup() {
   const [phase, setPhase] = useState<Phase>('button');
   const [email, setEmail] = useState('');
+<<<<<<< Updated upstream
   const [sendVisible, setSendVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+=======
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8780';
+      const response = await fetch(`${apiUrl}/api/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        setError(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (err) {
+      setError('Connection failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+>>>>>>> Stashed changes
 
   const handleClick = useCallback(() => {
     if (phase !== 'button') return;
@@ -76,6 +111,7 @@ function DynamicIslandSignup() {
           maxWidth: 'calc(100vw - 48px)',
         }}
       >
+<<<<<<< Updated upstream
         {(isButton || isSquished) && (
           <span
             style={{
@@ -89,6 +125,82 @@ function DynamicIslandSignup() {
               opacity: isSquished ? 0 : 1,
               transition: 'opacity 0.08s ease',
             }}
+=======
+        You're in. Check your inbox.
+      </motion.p>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-md">
+      <form onSubmit={handleSubmit} className="flex w-full">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="your@email.com"
+          disabled={loading}
+          className="flex-1 px-5 py-3 rounded-l-full bg-white border border-muted/30 border-r-0 text-cream placeholder:text-muted/50 text-sm focus:outline-none focus:border-pink transition-colors duration-300 disabled:opacity-50"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-6 py-3 rounded-r-full bg-pink text-white text-sm font-medium hover:bg-pink/90 transition-colors duration-300 disabled:opacity-50"
+        >
+          {loading ? 'Subscribing...' : 'Subscribe'}
+        </button>
+      </form>
+      {error && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-pink text-xs mt-2"
+        >
+          {error}
+        </motion.p>
+      )}
+    </div>
+  );
+}
+
+/* ─── Fade-in wrapper ─── */
+function FadeIn({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-40px' });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 12 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay, ease: 'easeOut' }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ─── Main Page ─── */
+export default function LandingPage() {
+  const features = [
+    { title: 'The Big Story', desc: 'The one AI development everyone will be talking about, broken down so you actually understand why it matters.' },
+    { title: 'Quick Hits', desc: '3-5 stories worth knowing, each in a few sentences. Designed to skim.' },
+    { title: 'Tool of the Day', desc: 'One AI tool worth trying. We test them first -- only the genuinely useful ones make the cut.' },
+    { title: 'The Vibe Check', desc: 'Our honest take on where AI is headed. Sometimes contrarian. Always straight with you.' },
+  ];
+
+  return (
+    <div className="min-h-screen">
+
+      {/* ─── Header ─── */}
+      <header className="fixed top-0 w-full z-50 border-b border-muted/10">
+        <div className="max-w-[1100px] mx-auto px-6 sm:px-10 py-4 flex items-center justify-between">
+          <span className="text-cream text-sm font-medium tracking-tight">AI for Blondes</span>
+          <a
+            href="#subscribe"
+            className="text-muted text-sm font-mono hover:text-cream transition-colors duration-300"
+>>>>>>> Stashed changes
           >
             Sign Up
           </span>
