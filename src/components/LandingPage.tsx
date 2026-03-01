@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-type Phase = 'button' | 'squish' | 'input' | 'success';
+type Phase = 'button' | 'squish' | 'input' | 'sending' | 'success' | 'error';
 
-// System font stack — same as Cursor on Mac (SF Pro)
 const systemFont = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
 
 function DynamicIslandSignup() {
   const [phase, setPhase] = useState<Phase>('button');
   const [email, setEmail] = useState('');
   const [sendVisible, setSendVisible] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleClick = useCallback(() => {
@@ -27,29 +27,52 @@ function DynamicIslandSignup() {
     }
   }, [phase]);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+
+    setPhase('sending');
     setSendVisible(false);
-    setTimeout(() => {
-      setPhase('success');
-      setTimeout(() => {
-        setPhase('button');
-        setEmail('');
-      }, 2200);
-    }, 100);
+    setErrorMsg('');
+
+    try {
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setPhase('success');
+        setTimeout(() => {
+          setPhase('button');
+          setEmail('');
+        }, 2200);
+      } else {
+        setErrorMsg(data.error || 'Something went wrong.');
+        setPhase('input');
+        setTimeout(() => setSendVisible(true), 100);
+      }
+    } catch {
+      setErrorMsg('Connection failed. Please try again.');
+      setPhase('input');
+      setTimeout(() => setSendVisible(true), 100);
+    }
   }, [email]);
 
-  const isExpanded = phase === 'input';
+  const isExpanded = phase === 'input' || phase === 'sending';
   const isSquished = phase === 'squish';
   const isSuccess = phase === 'success';
   const isButton = phase === 'button';
+  const isSending = phase === 'sending';
 
   const width = isExpanded ? 380 : isSquished ? 160 : isSuccess ? 185 : 200;
   const height = 50;
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div
         onClick={handleClick}
         style={{
@@ -112,6 +135,7 @@ function DynamicIslandSignup() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
+              disabled={isSending}
               className="island-input"
               style={{
                 flex: 1,
@@ -129,13 +153,14 @@ function DynamicIslandSignup() {
             />
             <button
               type="submit"
+              disabled={isSending}
               style={{
                 width: 34,
                 height: 34,
                 borderRadius: 17,
                 backgroundColor: '#D4607A',
                 border: 'none',
-                cursor: 'pointer',
+                cursor: isSending ? 'wait' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -169,6 +194,17 @@ function DynamicIslandSignup() {
           </span>
         )}
       </div>
+      {errorMsg && (
+        <p style={{
+          fontFamily: systemFont,
+          fontSize: 12,
+          color: '#D4607A',
+          marginTop: 8,
+          textAlign: 'center',
+        }}>
+          {errorMsg}
+        </p>
+      )}
     </div>
   );
 }
@@ -202,30 +238,9 @@ function Nav() {
         WebkitBackdropFilter: 'blur(12px)',
       }}
     >
-      <a
-        href="/"
-        style={linkStyle}
-        onMouseEnter={(e) => (e.currentTarget.style.color = '#1D1D1F')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = '#86868B')}
-      >
-        Home
-      </a>
-      <a
-        href="/about"
-        style={linkStyle}
-        onMouseEnter={(e) => (e.currentTarget.style.color = '#1D1D1F')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = '#86868B')}
-      >
-        About
-      </a>
-      <a
-        href="/login"
-        style={linkStyle}
-        onMouseEnter={(e) => (e.currentTarget.style.color = '#1D1D1F')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = '#86868B')}
-      >
-        Log In
-      </a>
+      <a href="/" style={linkStyle} onMouseEnter={(e) => (e.currentTarget.style.color = '#1D1D1F')} onMouseLeave={(e) => (e.currentTarget.style.color = '#86868B')}>Home</a>
+      <a href="/about" style={linkStyle} onMouseEnter={(e) => (e.currentTarget.style.color = '#1D1D1F')} onMouseLeave={(e) => (e.currentTarget.style.color = '#86868B')}>About</a>
+      <a href="/login" style={linkStyle} onMouseEnter={(e) => (e.currentTarget.style.color = '#1D1D1F')} onMouseLeave={(e) => (e.currentTarget.style.color = '#86868B')}>Log In</a>
     </nav>
   );
 }
@@ -254,7 +269,6 @@ export default function LandingPage() {
           paddingTop: 92,
         }}
       >
-        {/* Hero image — gigantic */}
         <div
           style={{
             opacity: visible ? 1 : 0,
@@ -267,18 +281,8 @@ export default function LandingPage() {
             justifyContent: 'center',
           }}
         >
-          <img
-            src="/hero.png"
-            alt="Artificial Intelligence for blondes"
-            style={{
-              display: 'block',
-              width: '100%',
-              height: 'auto',
-            }}
-          />
+          <img src="/hero.png" alt="Artificial Intelligence for blondes" style={{ display: 'block', width: '100%', height: 'auto' }} />
         </div>
-
-        {/* Sign Up button — raised 10px closer to hero */}
         <div
           style={{
             opacity: visible ? 1 : 0,
